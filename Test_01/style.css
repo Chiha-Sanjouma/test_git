@@ -1,0 +1,17 @@
+.boy {
+    color: blue;
+    border-radius: 10px;
+    border: 1px solid blue;
+    width: 10%;
+    margin-left: 85%;
+    padding: 10px;
+}
+
+.girl {
+    color: red;
+    border-radius: 10px;
+    border: 1px solid red;
+    width: 10%;
+    margin-left: 85%;
+    padding: 10px;
+}
