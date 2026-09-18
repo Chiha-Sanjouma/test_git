@@ -16,17 +16,12 @@
                 }
             }
             if(i == n){
-                document.write("素数！<br/>");
-            } else {
-                document.write("素数でない！<br/>");
-            }
-            if(i == n){
                 return 1;//素数
             } else {
                 return 0;//素数でない
             }
         }
-        document.write(primenumber(5))
+        document.write(primenumber(1))
         function primenumberlist(n){
             document.write(n+"までの素数は<br/>");
             for(let i=2; i<n; i++){//素数はiを除外するため
@@ -36,7 +31,7 @@
             }
             document.write("<br/>です。")
         }
-        primenumberlist(100);
+        primenumberlist(1000);
     </script>
 </body>
 </html>
