@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Canvas Test</title>
+        <script>
+            //canvasの中身を指し示すもの
+            let ctx;
+            //canvas の width 幅
+            let cw;
+            //canvas の height 高さ
+            let ch;
+            //ループする回数
+            const loopNum = 255;
+
+            //初期化処理
+            function init(){
+                //ID が mycanvas のものを canvas という変数にいれておく
+                let canvas = document.getElementById('mycanvas');
+                //canvas が存在しないか、 canvas の中身が無ければ処理終了
+                if(!canvas  ||!canvas.getContext){
+                    return false;
+                }
+
+                //canvas の中を指し示すものを代入
+                ctx = canvas.getContext('2d');
+                //canvas の幅、高さを代入しておく
+                cw = canvas.width;
+                ch = canvas.height;
+                //全体の透明度を設定
+                ctx.globalAlpha = 0.5;
+
+                //実際の描画処理
+                draw();
+
+                //一定時間ごとに書き換える
+                setInterval("draw()",200);
+            }
+
+            function draw(){
+                //画面をリセットする
+                ctx.fillStyle = "rgba(255,255,255,0.3)";
+                ctx.fillRect(0,0,cw,ch);
+
+                //処理をループ
+                for (let i=0;i<loopNum;i++){
+                
+                    //ランダムな線の色の指定
+                    ctx.strokeStyle = "rgba("+getRandomColor()+","+getRandomColor()+","+getRandomColor()+","+getRandomAlpha()+")";
+                    ctx.lineWidth = 1;
+
+                    //線の描画
+                    ctx.beginPath();
+                    ctx.moveTo(i*cw/loopNum,0);
+                    ctx.lineTo(cw-i*cw/loopNum,ch);
+                    ctx.stroke();
+                }
+            }
+
+            //ランダムな数値を返す
+            function getRandomNum(num){
+                return Math.floor(Math.random()*num);
+            }
+            function getRandomColor(){
+                return Math.floor(Math.random()*255);
+            }
+            function getRandomAlpha(){
+                return Math.random();
+            }
+        </script>
+    </head>
+<body onload="init();">
+    <h1>Canvas Test</h1>
+    <canvas id="mycanvas" width="1000" height="800"></canvas>
+    
+</body>
+</html>
