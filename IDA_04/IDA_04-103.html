@@ -1,0 +1,62 @@
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Canvas Test</title>
+        <script>
+            //canvasの中身を指し示すもの
+            let ctx;
+            //canvas の width 幅
+            let cw;
+            //canvas の height 高さ
+            let ch;
+
+            //移動速度
+            const speed = 2;
+            let x = 0;
+            
+            //初期化処理
+            function init(){
+                //ID が mycanvas のものを canvas という変数にいれておく
+                let canvas = document.getElementById('mycanvas');
+                //canvas が存在しないか、 canvas の中身が無ければ処理終了
+                if(!canvas  ||!canvas.getContext){
+                    return false;
+                }
+
+                //canvas の中を指し示すものを代入
+                ctx = canvas.getContext('2d');
+                //canvas の幅、高さを代入しておく
+                cw = canvas.width;
+                ch = canvas.height;
+                
+                //実際の描画処理
+                draw();
+
+                //一定時間ごとに書き換える 30fps にするために 1000msec/30 = 33msec
+                setInterval("draw()",33);
+            }
+            function draw(){
+                //画面をリセットする
+                ctx.fillStyle = "rgba(255,255,255,1)";
+                ctx.fillRect(0,0,cw,ch);
+
+                //円の描画
+                x += speed;
+                drawCircle(x, 100, 20, '#ff0000');
+            }
+
+            function drawCircle(x,y,scale,color){
+                //円の描画
+                ctx.beginPath();
+                ctx.arc(x, y, scale, 0, 2*Math.PI, false);
+                ctx.fillStyle = color;
+                ctx.fill();
+            }
+        </script>
+    </head>
+    <body onload="init();">
+        <h1>Canvas Test</h1>
+        <canvas id="mycanvas" width="1000" height="800"></canvas>    
+    </body>
+</html>
