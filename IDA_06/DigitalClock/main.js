@@ -1,0 +1,42 @@
+const { app, BrowserWindow } = require('electron/main')
+
+//ウィンドウの作成
+const createWindow = () => {
+    const win = new BrowserWindow({
+        width: 200,
+        height: 150,
+        transparent: true, //ウィンドウの背景を透過
+        frame: false, //枠の無いウィンドウ
+        resizable: false, //ウィンドウのリサイズを禁止
+        webPreferences: {
+            nodeIntegration: true, //Electron6から必要らしい
+            contextIsolation: false, //Security的には良くないらしい
+        },
+    })
+    //webPreferencesでメインプロセスとレンダラープロセスの通信をできるようにセキュリティを下げてる
+
+    //はじめにロードするファイルをindex.htmlに設定
+    win.loadFile('index.html')
+    //ウィンドウを閉じられた時の挙動
+    win.on('closed', ()=>{
+        app.quit();
+    })
+}
+
+//electronの準備ができた時の挙動。基本、createWindowを呼び出す
+app.whenReady().then(()=>{
+    createWindow()
+     //electronがアクティブになった時
+     app.on('activate', ()=> {
+        if (BrowserWindow.getAllWindows().length === 0) {
+            createWindow()
+        }
+     })
+})
+
+//ウィンドウが全部閉じられた時の挙動
+app.on('window-all-closed', () => {
+    if (process.platform !== 'darwin') {
+        app.quit()
+    }
+})
