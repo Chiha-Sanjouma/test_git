@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>顔認識</title>
+        <style>
+            /*video要素の上にcanvas要素をオーバーレイするためのCSS*/
+            /*コンテナ用のdivについて*/
+            #container {
+                position: relative; /*座標指定を相対値指定にする*/
+            }
+            /*カメラ映像を流すvideoについて*/
+            #video {
+                transform: scaleX(-1);/*左右反転させる*/
+            }
+            #canvas {/*描画用のcanvasについて*/
+                transform: scaleX(-1);/*左右反転させる*/
+                position: absolute;/*座標指定を絶対値指定にして*/
+                left: 0;/*X座標を0に*/
+                top: 0;/*Y座標を0に*/
+            }
+        </style>
+    </head>
+
+    <body>
+        <!--videoの上にcanvasをオーバーレイするためのdiv要素-->
+        <div id="container">
+            <!--カメラ映像を流すvideo-->
+            <video id="video" width="400" height="300" autoplay></video>
+            <!--重ねて描画するcanvas-->
+            <canvas id="canvas" width="400" height="300"></canvas>
+        </div>
+        <div id="dat"></div><!--データ表示用div要素-->
+
+        <!--関連ファイルの読み込み-->
+        <script src="js/clmtrackr.js"></script><!--clmtrackrのメインライブラリの読み込み-->
+        <script src="js/model_pca_20_svm.js"></script><!--顔モデル(※)の読み込み-->
+        <!--感情系ファイル読み込み-->
+        <script src="js/emotionClassifier.js"></script><!--★感情を分類する外部関数の読み込み-->
+        <script src="js/emotionModel.js"></script><!--感情モデル(※2)の読み込み-->
+
+        <script>
+            //もろもろの準備
+            var video = document.getElementById("video");//video要素を取得
+            var canvas = document.getElementById("canvas");//canvas要素の取得
+            var context = canvas.getContext("2d");//canvasのcontextの取得
+
+            var stampNose = new Image();//★鼻のスタンプ画像を入れるImageオブジェクト
+            var stampEars = new Image();//★耳のスタンプ画像を入れるImageオブジェクト
+            stampNose.src = "img/nose.png";//★鼻のスタンプ画像のファイル名
+            stampEars.src = "img/ears.png";//★耳のスタンプ画像のファイル名
+
+            var stampTear = new Image();//★涙のスタンプ画像を入れるImageオブジェクト
+            var stampSurp = new Image();//★驚きにスタンプ画像を入れるImageオブジェクト
+            var stampEyes = new Image();//★ハートのスタンプ画像を入れるImageオブジェクト
+            stampTear.src = "img/tear.png";
+            stampSurp.src = "img/surp.png";
+            stampEyes.src = "img/eyes.png";
+
+
+            var emoj = ["怒り","うんざり","恐れ","悲しみ","驚き","嬉しさ"]
+            //getUserMediaによるカメラ映像の取得
+            var media = navigator.mediaDevices.getUserMedia({//メディアデバイスを取得
+                video: {facingMode: "user"},
+                //カメラの映像を使う
+                audio: false
+                //マイクの音声は使わない
+            });
+            media.then((stream) => {//メディアデバイスが取得出来たら
+                video.srcObject = stream;
+            });
+
+            //clmtrackrの開始
+            var tracker = new clm.tracker();//trackerオブジェクトを作成
+            tracker.init(pModel);//trackerを所定のフェイスモデル(※)で初期化
+            tracker.start(video);//video要素内でフェイストラッキング開始
+
+            //感情分類の開始
+            var classifier = new emotionClassifier();//★emotionClassifierオブジェクトを作成
+            classifier.init(emotionModel);//★classifierを所定の感情モデル(※2)で初期化
+
+
+            //描画ループ
+            function drawLoop() {
+                requestAnimationFrame(drawLoop);//drawLoop関数を繰り返し実行
+                var positions = tracker.getCurrentPosition();//顔部品の現在位置の取得
+                context.clearRect(0, 0, canvas.width, canvas.height);//canvasをクリア
+                tracker.draw(canvas);//canvasにトラッキング結果を描画
+                showData(positions);//データの表示
+                drawStamp(positions, stampNose, 62, 2.5, 0.0, 0.0);//鼻のスタンプを描画
+                drawStamp(positions, stampEars, 33, 3.0, 0.0, -1.8);//★耳のスタンプを描画
+
+                var parameters = tracker.getCurrentParameters();//★現在の顔のパラメータを取得
+                var emotion = classifier.meanPredict(parameters);//★そのパラメータから感情を推定してemotionに結果を入れる
+                showEmotionData(emotion);//★感情データを表示
+
+                if(emotion[3].value > 0.4) {//★感情sadの値が一定値より大きければ
+                    drawStamp(positions, stampTear, 23, 0.4, 0.0, 0.8);
+                    drawStamp(positions, stampTear, 28, 0.4, 0.0, 0.8);    
+                }
+                if(emotion[4].value > 0.8) {//★感情Surprisedの値が一定値より大きければ
+                    drawStamp(positions, stampSurp, 14, 1.0, 0.7, 0.0);
+                }
+                if(emotion[4].value > 0.4) {
+                    drawStamp(positions, stampEyes, 27, 0.6, 0.0, 0.0);
+                    drawStamp(positions, stampEyes, 32, 0.6, 0.0, 0.0);
+                }
+                
+            }
+            drawLoop();//drawLoop関数をトリガー
+
+            //顔部品(特徴点)の位置データを表示するshowData関数
+            function showData(pos) {
+                var str = "";//データの文字列を入れる変数
+                for(var i = 0; i < pos.length; i++) {//全ての特徴点(71個)について
+                    str += "特徴点" + i + ": ("
+                    + Math.round(pos[i][0]) + ", " //X座標(四捨五入して整数に)
+                    + Math.round(pos[i][1]) + ")<br>"; //Y座標(四捨五入して整数に)    
+                }
+                var dat = document.getElementById("dat");//データ表示用div要素の取得
+                dat.innerHTML = str;//データ文字列の表示
+            }
+            
+            //★スタンプを描くdrawStamp関数
+            //(顔部品の位置データ、画像、基準位置、大きさ、横シフト、縦シフト)
+            function drawStamp(pos, img, bNo, scale, hShift, vShift) {
+                var eyes = pos[32][0] - pos[27][0];//幅の基準として両目の感覚を求める
+                var nose = pos[62][1] - pos[33][1];//高さの基準として眉間と鼻先の感覚を求める
+                var wScale = eyes / img.width; //両目の感覚をもとに画像のスケールを決める
+                var imgW = img.width * scale * wScale; //画像の幅をスケーリング
+                var imgH = img.height * scale * wScale; //画像の高さをスケーリング
+                var imgL = pos[bNo][0] - imgW / 2 + eyes * hShift; //画像のLeftを決める
+                var imgT = pos[bNo][1] - imgH / 2 + nose * vShift; //画像のTopを決める
+                context.drawImage(img, imgL, imgT, imgW, imgH); //画像を描く
+            }
+
+            //★感情データの表示
+            function showEmotionData(emo) {
+                var str ="";//データの文字列を入れる変数
+                for(var i = 0; i < emo.length; i++) {//全ての感情(6種類)について
+                    str += emoj[i] + ": " //感情名
+                        + emo[i].value.toFixed(1) + "<br>";//感情の程度(小数第一位まで)    
+                }
+                var dat = document.getElementById("dat");//データ表示用div要素の取得
+                dat.innerHTML = str; //データ文字列の表示
+            }
+            
+        </script>
+    </body>
+</html>

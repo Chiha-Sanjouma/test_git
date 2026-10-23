@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>顔認識</title>
+        <style>
+            /*video要素の上にcanvas要素をオーバーレイするためのCSS*/
+            /*コンテナ用のdivについて*/
+            #container {
+                position: relative; /*座標指定を相対値指定にする*/
+                /*カメラ映像を流すvideoについて*/
+                #video {
+                    transform: scaleX(-1);/*左右反転させる*/
+                }
+            }
+        </style>
+    </head>
+
+    <body>
+        <!--videoの上にcanvasをオーバーレイするためのdiv要素-->
+        <div id="container">
+            <!--カメラ映像を流すvideo-->
+            <video id="video" width="400" height="300" autoplay></video>
+        </div>
+        <script>
+            //もろもろの準備
+            var video = document.getElementById("video");//video要素を取得
+            //getUserMediaによるカメラ映像の取得
+            var media = navigator.mediaDevices.getUserMedia({//メディアデバイスを取得
+                video: {facingMode: "user"},
+                //カメラの映像を使う
+                audio: false
+                //マイクの音声は使わない
+            });
+            media.then((stream) => {//メディアデバイスが取得出来たら
+                video.srcObject = stream;
+            })
+        </script>
+    </body>
+</html>
