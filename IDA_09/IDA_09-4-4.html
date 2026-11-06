@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CSS Grid Layout</title>
+    <style>
+        .container {
+            display: grid;
+            grid-template-rows: 100px 50px;
+            grid-template-columns: 150px 1fr;
+            grid-template-areas: 
+            "areaA areaB"
+            "areaA areaC";
+        }
+        .item {color: white;}
+        .itemA {
+            grid-area: areaA;
+            background-color: red;
+        }
+        .itemB {
+            grid-area: areaB;
+            background-color: green;
+        }
+        .itemC {
+            grid-area: areaC;
+            background-color: blue;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="item itemA">A</div>
+        <div class="item itemB">B</div>
+        <div class="item itemC">C</div>
+    </div>
+</body>
+</html>
